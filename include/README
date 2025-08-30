@@ -1,0 +1,11 @@
+https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf
+
+SSD1306
+0.96-inch | 24.384mm
+Monochrome
+128 segments | columns
+8 pages | rows
+
+Two modes:
+    Command Mode = 0x00
+    Data Mode    = 0x40
