@@ -1,8 +1,10 @@
 #include "I2C.h"
+
+#include <cstring>
 #include <esp_log.h>
 
-I2C::I2C(uint8_t Address, SSD1306ControlBytes ControlBytes, SSD1306Commands Commands, SSD1306Pins Pins, SSD1306Configuration DeviceConfig)
-    : Address(Address), ControlBytes(ControlBytes), Commands(Commands), Pins(Pins), DeviceConfig(DeviceConfig)
+I2C::I2C(uint8_t Address, const SSD1306Configuration& DeviceConfig)
+    : Address(Address), DeviceConfig(DeviceConfig)
 {
     Configure();
 }
@@ -45,7 +47,7 @@ bool I2C::Start() const noexcept
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_RATE_MS);
     return true;
 }
-void I2C::Mode(const uint8_t Mode, i2c_cmd_handle_t& CommandHandle) const noexcept
+[[gnu::hot]] void I2C::Mode(const uint8_t Mode, i2c_cmd_handle_t& CommandHandle) const noexcept
 {
     i2c_master_write_byte(CommandHandle, Mode, true);
 }
@@ -83,24 +85,40 @@ void I2C::Mode(const uint8_t Mode, i2c_cmd_handle_t& CommandHandle) const noexce
     return Validations == ValuesToValidate;
 }
 
-[[gnu::hot]] void I2C::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, uint8_t& Data) const noexcept
+[[gnu::hot]] void I2C::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, uint8_t Data[16]) const noexcept
 {
-    IndexGDDRAM(Segment, Page, Offset, Data);
+    IndexGDDRAM(Segment, Page, Offset);
     i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
     Mode(ControlBytes.COMMAND_MODE, Command);
     i2c_master_write_byte(Command, Address << I2C_MASTER_WRITE, true);
     Mode(ControlBytes.DATA_MODE, Command);
-    i2c_master_write(Command, &Data, Width, true);
+    i2c_master_write(Command, Data, Width, true);
     i2c_master_stop(Command);
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_RATE_MS);
     i2c_cmd_link_delete(Command);
 
 }
-[[gnu::hot]] void I2C::IndexGDDRAM(const uint8_t Segment, const uint8_t Page, uint8_t Offset, uint8_t& Data) const noexcept
+
+[[gnu::hot]] void I2C::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept
 {
-    uint8_t SegmentLow = OffsetLow(Segment, Offset);
-    uint8_t SegmentHigh = OffsetHigh(Segment, Offset);
+    uint8_t DummyBuffer[16] = {};
+    Draw(Segment, Page, Width, Offset, DummyBuffer);
+}
+[[gnu::hot]] void I2C::Flush() const noexcept
+{
+    uint8_t DummyBuffer[16] = {};
+    for (uint8_t Page=0; Page < DeviceConfig.PAGES; Page++)
+    {
+        Draw(Page, Page, Page, 0, DummyBuffer);
+    }
+
+}
+
+[[gnu::hot]] void I2C::IndexGDDRAM(const uint8_t Segment, const uint8_t Page, uint8_t Offset) const noexcept
+{
+    const uint8_t SegmentLow = OffsetLow(Segment, Offset);
+    const uint8_t SegmentHigh = OffsetHigh(Segment, Offset);
     i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
     Mode(ControlBytes.COMMAND_MODE, Command);
@@ -115,11 +133,11 @@ void I2C::Mode(const uint8_t Mode, i2c_cmd_handle_t& CommandHandle) const noexce
 }
 [[nodiscard]] uint8_t I2C::OffsetLow(uint8_t Segment, uint8_t Offset) const noexcept
 {
-    uint8_t OffsetLow = (Segment + Offset) & 0x0F;
+    const uint8_t OffsetLow = (Segment + Offset) & 0x0F;
     return OffsetLow;
 }
 [[nodiscard]] uint8_t I2C::OffsetHigh(uint8_t Segment, uint8_t Offset) const noexcept
 {
-    uint8_t OffsetHigh = ((Segment + Offset) >> 4) & 0x0F;
+    const uint8_t OffsetHigh = ((Segment + Offset) >> 4) & 0x0F;
     return OffsetHigh;
 }
