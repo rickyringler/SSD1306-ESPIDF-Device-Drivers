@@ -11,6 +11,8 @@ struct SSD1306Commands
     static constexpr int SET_INVERSE_DISPLAY                      = 0xA7;
     static constexpr int SET_DISPLAY_OFF                          = 0xAE; //sleep
     static constexpr int SET_DISPLAY_ON                           = 0xAF;
+    static constexpr int ACTIVATE_SCROLL                          = 0x2F;
+    static constexpr int DEACTIVATE_SCROLL                        = 0x2E;
     static constexpr int CONTINUOUS_HORIZONTAL_SCROLL_SETUP_RIGHT = 0x26;
     static constexpr int CONTINUOUS_HORIZONTAL_SCROLL_SETUP_LEFT  = 0x27;
     static constexpr int CONTINUOUS_VERTICAL_SCROLL_SETUP_RIGHT   = 0x28;

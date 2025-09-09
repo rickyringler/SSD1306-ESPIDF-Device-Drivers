@@ -17,6 +17,16 @@ SSD1306::SSD1306(const uint16_t Width, const uint16_t Height, const uint8_t Page
     this->Bus->Draw(Segment, Page, Width, Offset, Data);
 }
 
+[[gnu::hot]] void SSD1306::HorizontalScroll(const Direction Direction) const noexcept
+{
+
+}
+
+[[gnu::hot]] void SSD1306::VerticalScroll(const Direction Direction) const noexcept
+{
+
+}
+
 [[gnu::hot]] void SSD1306::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept
 {
     this->Bus->Clear(Segment, Page, Width, Offset);

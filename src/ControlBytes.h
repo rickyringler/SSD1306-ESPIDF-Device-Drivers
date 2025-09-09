@@ -3,6 +3,7 @@
 
 struct SSD1306ControlBytes
 {
+    static constexpr int DUMMY_BYTE   = 0x00;
     static constexpr int COMMAND_MODE = 0x00;
     static constexpr int DATA_MODE    = 0x40;
 };

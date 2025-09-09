@@ -3,6 +3,7 @@
 
 #include "Configuration.h"
 #include "I2C.h"
+#include "Types.h"
 #include <driver/i2c.h>
 
 class SSD1306
@@ -12,6 +13,8 @@ class SSD1306
     SSD1306(uint16_t Width, uint16_t Height, uint8_t Pages, uint8_t Address, const SSD1306Configuration& Configuration);
 
     [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Offset, uint8_t Data[16]) const noexcept;
+    [[gnu::hot]] void HorizontalScroll(const Direction Direction) const noexcept;
+    [[gnu::hot]] void VerticalScroll(const Direction Direction) const noexcept;
     [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept;
     [[gnu::hot]] void Flush() const noexcept;
     [[nodiscard]] inline uint8_t GetWidth() const noexcept{return this->Width;}

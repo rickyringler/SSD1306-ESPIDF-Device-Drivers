@@ -97,7 +97,62 @@ bool I2C::Start() const noexcept
     i2c_master_stop(Command);
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_RATE_MS);
     i2c_cmd_link_delete(Command);
+}
 
+[[gnu::hot]] void I2C::Scroll(const Direction Direction) const noexcept
+{
+    i2c_cmd_handle_t Command = i2c_cmd_link_create();
+    i2c_master_start(Command);
+    i2c_master_write_byte(Command, (Address << 1) | I2C_MASTER_WRITE, true);
+    Mode(ControlBytes.COMMAND_MODE, Command);
+
+    switch (Direction)
+    {
+        case Direction::RIGHT:
+            ScrollHorizontal(Commands.CONTINUOUS_HORIZONTAL_SCROLL_SETUP_RIGHT, Command);
+            break;
+        case Direction::LEFT:
+            ScrollHorizontal(Commands.CONTINUOUS_HORIZONTAL_SCROLL_SETUP_LEFT, Command);
+            break;
+        case Direction::UP:
+            ScrollVertical(Commands.CONTINUOUS_VERTICAL_SCROLL_SETUP_RIGHT, Command, 63);
+            break;
+        case Direction::DOWN:
+            ScrollVertical(Commands.CONTINUOUS_VERTICAL_SCROLL_SETUP_RIGHT, Command, 0);
+            break;
+        default:
+            i2c_master_write_byte(Command, Commands.DEACTIVATE_SCROLL, true);
+            break;
+    }
+    i2c_master_stop(Command);
+    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_RATE_MS);
+    i2c_cmd_link_delete(Command);
+}
+
+[[gnu::hot]]  void I2C::ScrollHorizontal(const uint8_t CommandByte, i2c_cmd_handle_t& Command) const noexcept
+{
+    i2c_master_write_byte(Command, CommandByte, true);
+    i2c_master_write_byte(Command, ControlBytes.DUMMY_BYTE, true);
+    i2c_master_write_byte(Command, 0x00, true);
+    i2c_master_write_byte(Command, 0x07, true);
+    i2c_master_write_byte(Command, 0x07, true);
+    i2c_master_write_byte(Command, 0x00, true);
+    i2c_master_write_byte(Command, 0xFE, true);
+    i2c_master_write_byte(Command, Commands.ACTIVATE_SCROLL, true);
+}
+
+[[gnu::hot]]  void I2C::ScrollVertical(const uint8_t CommandByte, i2c_cmd_handle_t& Command, const uint8_t VerticalOffset) const noexcept
+{
+    i2c_master_write_byte(Command, CommandByte, true);
+    i2c_master_write_byte(Command, ControlBytes.DUMMY_BYTE, true);
+    i2c_master_write_byte(Command, 0x00, true);
+    i2c_master_write_byte(Command, 0x07, true);
+    i2c_master_write_byte(Command, 0x00, true);
+    i2c_master_write_byte(Command, VerticalOffset, true);
+    i2c_master_write_byte(Command, Commands.SET_VERTICAL_SCROLL_AREA, true);
+    i2c_master_write_byte(Command, ControlBytes.DUMMY_BYTE, true);
+    i2c_master_write_byte(Command, Commands.SET_DISPLAY_START_LINE, true);
+    i2c_master_write_byte(Command, Commands.ACTIVATE_SCROLL, true);
 }
 
 [[gnu::hot]] void I2C::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept

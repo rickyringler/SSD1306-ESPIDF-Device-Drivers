@@ -5,6 +5,7 @@
 #include "Commands.h"
 #include "ControlBytes.h"
 #include "Pins.h"
+#include "Types.h"
 #include <driver/i2c.h>
 
 #define TAG "I2C"
@@ -17,6 +18,7 @@ public:
     I2C(uint8_t Address, const SSD1306Configuration& Configuration);
 
     [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Width, uint8_t Offset, uint8_t Data[16]) const noexcept;
+    [[gnu::hot]] void Scroll(const Direction Direction) const noexcept;
     [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept;
     [[gnu::hot]] void Flush() const noexcept;
 
@@ -37,6 +39,8 @@ private:
     [[nodiscard]] uint8_t   OffsetLow(uint8_t Segment, uint8_t Offset) const noexcept;
     [[nodiscard]] uint8_t   OffsetHigh(uint8_t Segment, uint8_t Offset) const noexcept;
     [[gnu::hot]]  void      IndexGDDRAM(const uint8_t Segment, const uint8_t Page, uint8_t Offset) const noexcept;
+    [[gnu::hot]]  void      ScrollHorizontal(const uint8_t CommandByte, i2c_cmd_handle_t& Command) const noexcept;
+    [[gnu::hot]]  void      ScrollVertical(const uint8_t CommandByte, i2c_cmd_handle_t& Command, const uint8_t VerticalOffset) const noexcept;
 };
 
 #endif
