@@ -1,10 +1,10 @@
 #include "I2C.h"
-
 #include <cstring>
 #include <esp_log.h>
 
-I2C::I2C(uint8_t Address, const SSD1306Configuration& DeviceConfig)
-    : Address(Address), DeviceConfig(DeviceConfig)
+
+I2C::I2C(uint8_t Address, const SSD1306Configuration& Configuration)
+    : Address(Address), DeviceConfig(Configuration)
 {
     Configure();
 }
@@ -12,7 +12,7 @@ I2C::I2C(uint8_t Address, const SSD1306Configuration& DeviceConfig)
 bool I2C::Configure() noexcept
 {
     const esp_err_t Error = BuildConfig();
-    if (Error == ESP_OK)
+    if (Error != ESP_OK)
     ESP_LOGW(TAG, "ERROR building Config");
 
     ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_1, &BusConfig));
@@ -44,7 +44,7 @@ bool I2C::Start() const noexcept
     i2c_master_write_byte(Command, Commands.SET_DISPLAY_ON, true);
 
     i2c_master_stop(Command);
-    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_RATE_MS);
+    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     return true;
 }
 [[gnu::hot]] void I2C::Mode(const uint8_t Mode, i2c_cmd_handle_t& CommandHandle) const noexcept
@@ -95,11 +95,11 @@ bool I2C::Start() const noexcept
     Mode(ControlBytes.DATA_MODE, Command);
     i2c_master_write(Command, Data, Width, true);
     i2c_master_stop(Command);
-    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_RATE_MS);
+    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(Command);
 }
 
-[[gnu::hot]] void I2C::Scroll(const Direction Direction) const noexcept
+[[gnu::hot]] void I2C::Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept
 {
     i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
@@ -108,24 +108,18 @@ bool I2C::Start() const noexcept
 
     switch (Direction)
     {
-        case Direction::RIGHT:
-            ScrollHorizontal(Commands.CONTINUOUS_HORIZONTAL_SCROLL_SETUP_RIGHT, Command);
+        case Direction::HORIZONTAL:
+            ScrollHorizontal(ScrollCommand, Command);
             break;
-        case Direction::LEFT:
-            ScrollHorizontal(Commands.CONTINUOUS_HORIZONTAL_SCROLL_SETUP_LEFT, Command);
-            break;
-        case Direction::UP:
-            ScrollVertical(Commands.CONTINUOUS_VERTICAL_SCROLL_SETUP_RIGHT, Command, 63);
-            break;
-        case Direction::DOWN:
-            ScrollVertical(Commands.CONTINUOUS_VERTICAL_SCROLL_SETUP_RIGHT, Command, 0);
+        case Direction::VERTICAL:
+            ScrollVertical(ScrollCommand, Command, VerticalOffset);
             break;
         default:
             i2c_master_write_byte(Command, Commands.DEACTIVATE_SCROLL, true);
             break;
     }
     i2c_master_stop(Command);
-    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_RATE_MS);
+    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(Command);
 }
 
@@ -160,6 +154,7 @@ bool I2C::Start() const noexcept
     uint8_t DummyBuffer[16] = {};
     Draw(Segment, Page, Width, Offset, DummyBuffer);
 }
+
 [[gnu::hot]] void I2C::Flush() const noexcept
 {
     uint8_t DummyBuffer[16] = {};
@@ -167,7 +162,6 @@ bool I2C::Start() const noexcept
     {
         Draw(Page, Page, Page, 0, DummyBuffer);
     }
-
 }
 
 [[gnu::hot]] void I2C::IndexGDDRAM(const uint8_t Segment, const uint8_t Page, uint8_t Offset) const noexcept
@@ -183,7 +177,7 @@ bool I2C::Start() const noexcept
     i2c_master_write_byte(Command, Commands.SET_HIGHER_COLUMN_START + SegmentHigh, true);
     i2c_master_write_byte(Command, Commands.SET_PAGE_START | Page, true);
     i2c_master_stop(Command);
-    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_RATE_MS);
+    i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(Command);
 }
 [[nodiscard]] uint8_t I2C::OffsetLow(uint8_t Segment, uint8_t Offset) const noexcept

@@ -3,10 +3,8 @@
 
 enum Direction
 {
-    RIGHT=0,
-    LEFT,
-    UP,
-    DOWN,
+    HORIZONTAL=0,
+    VERTICAL,
     STOP
 };
 

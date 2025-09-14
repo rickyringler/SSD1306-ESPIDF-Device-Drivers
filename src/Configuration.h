@@ -3,13 +3,10 @@
 
 struct SSD1306Configuration
 {
-    SSD1306Configuration(const int CLOCK_SPEED_HZ=400000, const int I2C_MODE_MASTER=1, const int GPIO_PULLUP_ENABLE=1, const int PAGES=1)
-    : CLOCK_SPEED_HZ(CLOCK_SPEED_HZ), I2C_MODE_MASTER(I2C_MODE_MASTER), GPIO_PULLUP_ENABLE(GPIO_PULLUP_ENABLE), PAGES(PAGES)
-    {}
-    const int CLOCK_SPEED_HZ;
-    const int I2C_MODE_MASTER;
-    const int GPIO_PULLUP_ENABLE;
-    const int PAGES;
+    const int CLOCK_SPEED_HZ=400000;
+    const int I2C_MODE_MASTER=1;
+    const int GPIO_PULLUP_ENABLE=1;
+    const int PAGES=8;
 };
 
 #endif

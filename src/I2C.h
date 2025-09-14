@@ -1,7 +1,7 @@
 #ifndef SSD1306_3D_DEVICE_DRIVER_I2C_H
 #define SSD1306_3D_DEVICE_DRIVER_I2C_H
 
-#include "SSD1306.h"
+#include "Configuration.h"
 #include "Commands.h"
 #include "ControlBytes.h"
 #include "Pins.h"
@@ -9,6 +9,7 @@
 #include <driver/i2c.h>
 
 #define TAG "I2C"
+#define TIMEOUT (= 1000/portTICK_PERIOD_MS)
 
 class I2C
 {
@@ -18,7 +19,7 @@ public:
     I2C(uint8_t Address, const SSD1306Configuration& Configuration);
 
     [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Width, uint8_t Offset, uint8_t Data[16]) const noexcept;
-    [[gnu::hot]] void Scroll(const Direction Direction) const noexcept;
+    [[gnu::hot]] void Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset=63) const noexcept;
     [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept;
     [[gnu::hot]] void Flush() const noexcept;
 
