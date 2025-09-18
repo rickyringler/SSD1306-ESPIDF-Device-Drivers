@@ -9,7 +9,7 @@
 #include <driver/i2c.h>
 
 #define TAG "I2C"
-#define TIMEOUT (= 1000/portTICK_PERIOD_MS)
+#define TIMEOUT (1000/portTICK_PERIOD_MS)
 
 class I2C
 {

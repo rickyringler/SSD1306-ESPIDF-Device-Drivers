@@ -26,6 +26,7 @@ bool I2C::Start() const noexcept
     const i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
     i2c_master_write_byte(Command, (Address << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(Command, ControlBytes.COMMAND_MODE, true);
     i2c_master_write_byte(Command, Commands.SET_MULTIPLEX_RATIO, true);
     i2c_master_write_byte(Command, Commands.SET_LOWER_COLUMN_START, true);
     i2c_master_write_byte(Command, Commands.SET_DISPLAY_OFFSET, true);
@@ -47,6 +48,7 @@ bool I2C::Start() const noexcept
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     return true;
 }
+
 [[gnu::hot]] void I2C::Mode(const uint8_t Mode, i2c_cmd_handle_t& CommandHandle) const noexcept
 {
     i2c_master_write_byte(CommandHandle, Mode, true);
@@ -90,7 +92,6 @@ bool I2C::Start() const noexcept
     IndexGDDRAM(Segment, Page, Offset);
     i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
-    Mode(ControlBytes.COMMAND_MODE, Command);
     i2c_master_write_byte(Command, Address << I2C_MASTER_WRITE, true);
     Mode(ControlBytes.DATA_MODE, Command);
     i2c_master_write(Command, Data, Width, true);
@@ -170,9 +171,8 @@ bool I2C::Start() const noexcept
     const uint8_t SegmentHigh = OffsetHigh(Segment, Offset);
     i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
-    Mode(ControlBytes.COMMAND_MODE, Command);
     i2c_master_write_byte(Command, Address << I2C_MASTER_WRITE, true);
-    Mode(ControlBytes.DATA_MODE, Command);
+    Mode(ControlBytes.COMMAND_MODE, Command);
     i2c_master_write_byte(Command, Commands.SET_LOWER_COLUMN_START + SegmentLow, true);
     i2c_master_write_byte(Command, Commands.SET_HIGHER_COLUMN_START + SegmentHigh, true);
     i2c_master_write_byte(Command, Commands.SET_PAGE_START | Page, true);
