@@ -1,5 +1,4 @@
 #include "I2C.h"
-#include <cstring>
 #include <esp_log.h>
 
 
@@ -15,8 +14,8 @@ bool I2C::Configure() noexcept
     if (Error != ESP_OK)
     ESP_LOGW(TAG, "ERROR building Config");
 
-    ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_1, &BusConfig));
-    ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_1, I2C_MODE_MASTER, 0, 0, 0));
+    ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &BusConfig));
+    ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0));
 
     return true;
 }
@@ -48,6 +47,26 @@ bool I2C::Start() const noexcept
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     return true;
 }
+[[gnu::cold]] void I2C::BusAddressScan() const
+{
+    i2c_port_t Port = I2C_NUM_0;
+    ESP_LOGI(TAG, "Scanning I2C port %d  : ", Port);
+    int Found = 0;
+    for (uint8_t addr = 1; addr < 0x7F; ++addr) {
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_WRITE, true);
+        i2c_master_stop(cmd);
+        esp_err_t r = i2c_master_cmd_begin(Port, cmd, pdMS_TO_TICKS(50));
+        i2c_cmd_link_delete(cmd);
+        if (r == ESP_OK) {
+            ESP_LOGI(TAG, "I2C device found at 0x%02X", addr);
+            ++Found;
+        }
+        vTaskDelay(pdMS_TO_TICKS(2));
+    }
+    ESP_LOGI(TAG, "Scan complete: %d device(s) found.", Found);
+}
 
 [[gnu::hot]] void I2C::Mode(const uint8_t Mode, i2c_cmd_handle_t& CommandHandle) const noexcept
 {
@@ -57,8 +76,8 @@ bool I2C::Start() const noexcept
 [[nodiscard]] esp_err_t I2C::BuildConfig() noexcept
 {
     BusConfig.mode             = I2C_MODE_MASTER;
-    BusConfig.sda_io_num       = Pins.SDA_PIN;
-    BusConfig.scl_io_num       = Pins.SCL_PIN;
+    BusConfig.sda_io_num       = Pins.SDA;
+    BusConfig.scl_io_num       = Pins.SCL;
     BusConfig.sda_pullup_en    = GPIO_PULLUP_ENABLE;
     BusConfig.scl_pullup_en    = GPIO_PULLUP_ENABLE;
     BusConfig.master.clk_speed = DeviceConfig.CLOCK_SPEED_HZ;
@@ -73,9 +92,9 @@ bool I2C::Start() const noexcept
 
     if (BusConfig.mode == DeviceConfig.I2C_MODE_MASTER)
         Validations--;
-    if (BusConfig.sda_io_num == Pins.SDA_PIN)
+    if (BusConfig.sda_io_num == Pins.SDA)
         Validations--;
-    if (BusConfig.scl_io_num == Pins.SCL_PIN)
+    if (BusConfig.scl_io_num == Pins.SCL)
         Validations--;
     if (BusConfig.sda_pullup_en == DeviceConfig.GPIO_PULLUP_ENABLE)
         Validations--;
@@ -87,14 +106,14 @@ bool I2C::Start() const noexcept
     return Validations == ValuesToValidate;
 }
 
-[[gnu::hot]] void I2C::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, uint8_t Data[16]) const noexcept
+[[gnu::hot]] void I2C::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, uint8_t Data) const noexcept
 {
     IndexGDDRAM(Segment, Page, Offset);
     i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
     i2c_master_write_byte(Command, Address << I2C_MASTER_WRITE, true);
     Mode(ControlBytes.DATA_MODE, Command);
-    i2c_master_write(Command, Data, Width, true);
+    i2c_master_write(Command, &Data, Width, true);
     i2c_master_stop(Command);
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(Command);
@@ -153,7 +172,7 @@ bool I2C::Start() const noexcept
 [[gnu::hot]] void I2C::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept
 {
     uint8_t DummyBuffer[16] = {};
-    Draw(Segment, Page, Width, Offset, DummyBuffer);
+    Draw(Segment, Page, Width, Offset, *DummyBuffer);
 }
 
 [[gnu::hot]] void I2C::Flush() const noexcept
@@ -161,7 +180,7 @@ bool I2C::Start() const noexcept
     uint8_t DummyBuffer[16] = {};
     for (uint8_t Page=0; Page < DeviceConfig.PAGES; Page++)
     {
-        Draw(Page, Page, Page, 0, DummyBuffer);
+        Draw(Page, Page, Page, 0, *DummyBuffer);
     }
 }
 

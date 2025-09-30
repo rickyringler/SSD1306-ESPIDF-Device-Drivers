@@ -1,0 +1,193 @@
+#include "SPI.h"
+#include <esp_log.h>
+
+SPI::SPI(uint8_t Address, const SSD1306Configuration& Configuration)
+    : Address(Address), DeviceConfig(Configuration)
+{
+    Configure();
+    Init();
+    Start();
+}
+
+[[gnu::cold]] void SPI::BusAddressScan() const
+{
+    ESP_LOGI(TAG, "Probing SPI device via MISO");
+    uint8_t tx = 0x00;
+    uint8_t rx = 0x00;
+    spi_transaction_t t = {};
+    t.length    = 8;
+    t.tx_buffer = &tx;
+    t.rx_buffer = &rx;
+
+    Mode(ControlBytes.COMMAND_MODE, Pins.DC);
+    esp_err_t r = spi_device_transmit(*DeviceHandle, &t);
+    if (r != ESP_OK) {
+        ESP_LOGW(TAG, "spi_device_transmit failed : %d", r);
+    }
+
+    ESP_LOGI(TAG, "Probe returned 0x%02X", rx);
+}
+
+[[gnu::cold]] bool SPI::Configure() noexcept
+{
+    SetupPin(Pins.DC);
+    SetupPin(Pins.CS);
+    const esp_err_t Error = BuildConfig();
+    if (Error != ESP_OK)
+        ESP_LOGW(TAG, "ERROR building Config");
+    ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &BusConfig, SPI_DMA_CH_AUTO));
+
+    return true;
+}
+
+bool SPI::Init() noexcept
+{
+    this->DeviceHandle = SetupDevice();
+    return true;
+}
+
+void SPI::SetupPin(gpio_num_t Pin) const noexcept
+{
+    gpio_reset_pin(Pin);
+    gpio_set_direction(Pin, GPIO_MODE_OUTPUT);
+    gpio_set_level(Pin, 0);
+}
+
+[[nodiscard]] esp_err_t SPI::BuildConfig() noexcept
+{
+    BusConfig.mosi_io_num     = Pins.MOSI;
+    BusConfig.miso_io_num     = -1;
+    BusConfig.sclk_io_num     = Pins.SCLK;
+    BusConfig.quadwp_io_num   = -1;
+    BusConfig.quadhd_io_num   = -1;
+    BusConfig.max_transfer_sz = 0;
+    BusConfig.flags           = 0;
+
+    return ValidateConfig() ? ESP_OK : ESP_FAIL;
+}
+
+[[nodiscard]] bool SPI::ValidateConfig() const noexcept
+{
+    const uint8_t ValuesToValidate = 6;
+    uint8_t Validations = ValuesToValidate;
+
+    if (BusConfig.mosi_io_num     == Pins.MOSI)
+        Validations--;
+    if (BusConfig.miso_io_num     == -1)
+        Validations--;
+    if (BusConfig.sclk_io_num     == Pins.SCLK)
+        Validations--;
+    if (BusConfig.quadwp_io_num   == -1)
+        Validations--;
+    if (BusConfig.quadhd_io_num   == -1)
+        Validations--;
+    if (BusConfig.max_transfer_sz == 0)
+        Validations--;
+
+    return Validations == 0;
+}
+
+[[nodiscard]] spi_device_handle_t* SPI::SetupDevice() const noexcept
+{
+    static spi_device_handle_t Handle = nullptr;
+    spi_device_interface_config_t InterfaceConfig = {};
+
+    InterfaceConfig.clock_speed_hz = DeviceConfig.CLOCK_SPEED_HZ;
+    InterfaceConfig.spics_io_num = Pins.CS;
+    InterfaceConfig.queue_size = 1;
+
+    ESP_ERROR_CHECK(spi_bus_add_device(SPI2_HOST, &InterfaceConfig, &Handle));
+    return &Handle;
+}
+
+bool SPI::Start() const noexcept
+{
+    WriteByte(Commands.SET_DISPLAY_OFF , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_DISPLAY_CLOCK_FREQ , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SYS_CALL , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_MULTIPLEX_RATIO , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(0x3F , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_DISPLAY_OFFSET , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(ControlBytes.DUMMY_BYTE , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_DISPLAY_START_LINE , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_SEGMENT_REMAP_127 , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_COM_OUTPUT_SCAN_DIRECTION_REMAPPED , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_COM_PINS_HARDWARE_CONFIG , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(0x12 , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_CONTRAST_CONTROL , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(0x7F , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_PRECHARGE_PERIOD , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(0xF1 , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_VCOM_DESELECT_LEVEL , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(0x40 , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.CHARGE_PUMP_SETTING , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(0x14 , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_MEMORY_ADDRESSING_MODE, 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(0x02, 8, ControlBytes.COMMAND_MODE, Pins.DC); // 0x02 = Page Addressing
+    WriteByte(Commands.SET_LOWER_COLUMN_START + 0x00 , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_HIGHER_COLUMN_START + 0x00 , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_PAGE_START | 0x00 , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.ENTIRE_DISPLAY_ON_WITH_CONTENT , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_NORMAL_DISPLAY , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.DEACTIVATE_SCROLL , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_DISPLAY_ON , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+
+    return true;
+}
+
+[[gnu::hot]] void SPI::Mode(const uint8_t CommandByte, const uint8_t Pin) const noexcept
+{
+    gpio_set_level((gpio_num_t)Pin, CommandByte);
+}
+
+[[gnu::hot]] bool SPI::WriteByte(const int Data, const uint8_t Width, const uint8_t CommandByte, const uint8_t Pin) const noexcept
+{
+    static spi_transaction_t Transaction = {};
+
+    Transaction.length = Width;
+    Transaction.tx_buffer = (void*)Data;
+    Mode(CommandByte, Pin);
+    spi_device_transmit(*DeviceHandle, &Transaction);
+
+    return true;
+}
+
+[[gnu::hot]] void SPI::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, uint8_t Data) const noexcept
+{
+    IndexGDDRAM(Segment, Page, Offset);
+    WriteByte(Data, Width, ControlBytes.DATA_MODE, Pins.DC);
+}
+
+[[gnu::hot]] void SPI::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept
+{
+    uint8_t DummyBuffer[16] = {};
+    Draw(Segment, Page, Width, Offset, *DummyBuffer);
+}
+
+[[gnu::hot]] void SPI::Flush() const noexcept
+{
+    uint8_t DummyBuffer[16] = {};
+    for (uint8_t Page=0; Page < DeviceConfig.PAGES; Page++)
+    {
+        Draw(Page, Page, Page, 0, *DummyBuffer);
+    }
+}
+
+[[gnu::hot]] void SPI::IndexGDDRAM(const uint8_t Segment, const uint8_t Page, uint8_t Offset) const noexcept
+{
+    const uint8_t SegmentLow = OffsetLow(Segment, Offset);
+    const uint8_t SegmentHigh = OffsetHigh(Segment, Offset);
+    WriteByte(Commands.SET_LOWER_COLUMN_START + SegmentLow , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_HIGHER_COLUMN_START + SegmentHigh , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+    WriteByte(Commands.SET_PAGE_START | Page , 8, ControlBytes.COMMAND_MODE, Pins.DC);
+}
+[[nodiscard]] uint8_t SPI::OffsetLow(uint8_t Segment, uint8_t Offset) const noexcept
+{
+    const uint8_t OffsetLow = (Segment + Offset) & 0x0F;
+    return OffsetLow;
+}
+[[nodiscard]] uint8_t SPI::OffsetHigh(uint8_t Segment, uint8_t Offset) const noexcept
+{
+    const uint8_t OffsetHigh = ((Segment + Offset) >> 4) & 0x0F;
+    return OffsetHigh;
+}
