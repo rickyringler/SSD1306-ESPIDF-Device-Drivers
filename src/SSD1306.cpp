@@ -1,4 +1,6 @@
 #include "SSD1306.h"
+#include "I2C.h"
+#include "SPI.h"
 
 SSD1306::SSD1306(const uint16_t Width, const uint16_t Height, const uint8_t Pages, const uint8_t Address, SSD1306Configuration& Configuration)
 : Width(Width), Height(Height), Address(Address), Pages(Pages)
@@ -6,9 +8,9 @@ SSD1306::SSD1306(const uint16_t Width, const uint16_t Height, const uint8_t Page
     Init(Address, Configuration);
 }
 
-[[gnu::cold]] void SSD1306::BusAddressScan() const
+[[gnu::cold]] void SSD1306::Probe() const
 {
-    this->Bus->BusAddressScan();
+    this->Bus->Probe();
 }
 
 [[gnu::cold]] bool SSD1306::Init(const uint8_t Address, SSD1306Configuration Configuration) noexcept

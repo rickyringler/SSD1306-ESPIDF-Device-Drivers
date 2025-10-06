@@ -3,9 +3,6 @@
 
 #include "Configuration.h"
 #include "BusProtocol.h"
-#include "I2C.h"
-#include "SPI.h"
-#include "Types.h"
 #include <driver/i2c.h>
 
 class SSD1306
@@ -14,7 +11,7 @@ public:
 
     SSD1306(const uint16_t Width, const uint16_t Height, const uint8_t Pages, const uint8_t Address, SSD1306Configuration& Configuration);
 
-    [[gnu::cold]] void BusAddressScan() const;
+    [[gnu::cold]] void Probe() const;
     [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Offset, uint8_t Data[16]) const noexcept;
     [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept;
     [[gnu::hot]] void Flush() const noexcept;

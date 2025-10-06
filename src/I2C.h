@@ -3,7 +3,7 @@
 
 #include "BusProtocol.h"
 
-#define TAG "I2C"
+#define I2C_TAG "I2C"
 #define TIMEOUT (1000/portTICK_PERIOD_MS)
 
 class I2C final : public BusProtocol
@@ -12,7 +12,7 @@ public:
 
     I2C(uint8_t Address, const SSD1306Configuration& Configuration);
 
-    [[gnu::cold]] void BusAddressScan() const override;
+    [[gnu::cold]] esp_err_t Probe() const override;
     [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Width, uint8_t Offset, uint8_t Data) const noexcept override;
     [[gnu::hot]] void Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept override;
     [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept override;

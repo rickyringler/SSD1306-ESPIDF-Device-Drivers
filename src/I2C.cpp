@@ -1,7 +1,6 @@
 #include "I2C.h"
 #include <esp_log.h>
 
-
 I2C::I2C(uint8_t Address, const SSD1306Configuration& Configuration)
     : Address(Address), DeviceConfig(Configuration)
 {
@@ -12,7 +11,7 @@ bool I2C::Configure() noexcept
 {
     const esp_err_t Error = BuildConfig();
     if (Error != ESP_OK)
-    ESP_LOGW(TAG, "ERROR building Config");
+    ESP_LOGW(I2C_TAG, "ERROR building Config");
 
     ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &BusConfig));
     ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0));
@@ -47,25 +46,30 @@ bool I2C::Start() const noexcept
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     return true;
 }
-[[gnu::cold]] void I2C::BusAddressScan() const
+
+[[gnu::cold]] esp_err_t I2C::Probe() const
 {
     i2c_port_t Port = I2C_NUM_0;
-    ESP_LOGI(TAG, "Scanning I2C port %d  : ", Port);
+    ESP_LOGI(I2C_TAG, "I2C : Probe : Begin");
+    ESP_LOGI(I2C_TAG, "I2C : Probe : Scanning port %d  : ", Port);
     int Found = 0;
-    for (uint8_t addr = 1; addr < 0x7F; ++addr) {
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_WRITE, true);
-        i2c_master_stop(cmd);
-        esp_err_t r = i2c_master_cmd_begin(Port, cmd, pdMS_TO_TICKS(50));
-        i2c_cmd_link_delete(cmd);
-        if (r == ESP_OK) {
-            ESP_LOGI(TAG, "I2C device found at 0x%02X", addr);
+    for (int AddressToScan = 1; AddressToScan < 0x7F; ++AddressToScan)
+    {
+        i2c_cmd_handle_t Command = i2c_cmd_link_create();
+        i2c_master_start(Command);
+        i2c_master_write_byte(Command, (AddressToScan << 1) | I2C_MASTER_WRITE, true);
+        i2c_master_stop(Command);
+        esp_err_t Response = i2c_master_cmd_begin(Port, Command, pdMS_TO_TICKS(50));
+        i2c_cmd_link_delete(Command);
+        if (Response == ESP_OK)
+        {
+            ESP_LOGI(I2C_TAG, "I2C : Probe : Device found at 0x%02X", AddressToScan);
             ++Found;
         }
         vTaskDelay(pdMS_TO_TICKS(2));
     }
-    ESP_LOGI(TAG, "Scan complete: %d device(s) found.", Found);
+    ESP_LOGI(I2C_TAG, "I2C : Probe : Devices Found : %d", Found);
+    return Found > 0 ? ESP_OK : ESP_FAIL;
 }
 
 [[gnu::hot]] void I2C::Mode(const uint8_t Mode, i2c_cmd_handle_t& CommandHandle) const noexcept
@@ -178,7 +182,7 @@ bool I2C::Start() const noexcept
 [[gnu::hot]] void I2C::Flush() const noexcept
 {
     uint8_t DummyBuffer[16] = {};
-    for (uint8_t Page=0; Page < DeviceConfig.PAGES; Page++)
+    for (int Page=0; Page < DeviceConfig.PAGES; Page++)
     {
         Draw(Page, Page, Page, 0, *DummyBuffer);
     }
@@ -199,11 +203,13 @@ bool I2C::Start() const noexcept
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(Command);
 }
+
 [[nodiscard]] uint8_t I2C::OffsetLow(uint8_t Segment, uint8_t Offset) const noexcept
 {
     const uint8_t OffsetLow = (Segment + Offset) & 0x0F;
     return OffsetLow;
 }
+
 [[nodiscard]] uint8_t I2C::OffsetHigh(uint8_t Segment, uint8_t Offset) const noexcept
 {
     const uint8_t OffsetHigh = ((Segment + Offset) >> 4) & 0x0F;
