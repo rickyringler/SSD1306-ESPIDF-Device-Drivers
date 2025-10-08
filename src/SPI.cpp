@@ -7,7 +7,6 @@ SPI::SPI(uint8_t Address, const SSD1306Configuration& Configuration)
     Configure();
     Init();
     Start();
-    Probe();
 }
 
 [[gnu::cold]] bool SPI::Configure() noexcept
@@ -137,7 +136,7 @@ void SPI::SetupPin(gpio_num_t Pin) const noexcept
 {
     spi_transaction_t Transaction = {};
 
-    uint32_t MyData = static_cast<uint32_t>(Data);
+    uint32_t MyData = static_cast<uint8_t>(Data);
     Transaction.length = DeviceConfig.BIT_SIZE;
     Transaction.flags = SPI_TRANS_USE_TXDATA;
     Transaction.tx_data[0] = MyData;
@@ -147,10 +146,21 @@ void SPI::SetupPin(gpio_num_t Pin) const noexcept
     return true;
 }
 
-[[gnu::hot]] void SPI::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, uint8_t Data) const noexcept
+[[gnu::hot]] bool SPI::WriteBuffer(const uint8_t* Data, size_t Bytes, const uint8_t CommandByte, const uint8_t Pin) const noexcept
+{
+    spi_transaction_t Transaction = {};
+    Transaction.length = Bytes * DeviceConfig.BIT_SIZE;
+    Transaction.tx_buffer = Data;
+    Mode(CommandByte, Pin);
+    spi_device_transmit(DeviceHandle, &Transaction);
+    ESP_LOGI("SPI TEST", "DRAW IMAGE");
+    return true;
+}
+
+[[gnu::hot]] void SPI::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept
 {
     IndexGDDRAM(Segment, Page, Offset);
-    WriteByte(Data, ControlBytes.DATA_MODE, Pins.DC);
+    WriteBuffer(Data, Bytes, ControlBytes.DATA_MODE, Pins.DC);
 }
 
 [[gnu::hot]] void SPI::Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept
@@ -195,16 +205,16 @@ void SPI::SetupPin(gpio_num_t Pin) const noexcept
 
 [[gnu::hot]] void SPI::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept
 {
-    uint8_t DummyBuffer[16] = {};
-    Draw(Segment, Page, Width, Offset, *DummyBuffer);
+    uint8_t* DummyBuffer = 0;
+    Draw(Segment, Page, Width, Offset, 0, DummyBuffer);
 }
 
 [[gnu::hot]] void SPI::Flush() const noexcept
 {
-    uint8_t DummyBuffer[16] = {};
+    uint8_t* DummyBuffer = 0;
     for (int Page=0; Page < DeviceConfig.PAGES; Page++)
     {
-        Draw(Page, Page, Page, 0, *DummyBuffer);
+        Draw(Page, Page, Page, 0, 0, DummyBuffer);
     }
 }
 

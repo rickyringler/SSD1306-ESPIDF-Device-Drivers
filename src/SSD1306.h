@@ -12,7 +12,7 @@ public:
     SSD1306(const uint16_t Width, const uint16_t Height, const uint8_t Pages, const uint8_t Address, SSD1306Configuration& Configuration);
 
     [[gnu::cold]] void Probe() const;
-    [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Offset, uint8_t Data[16]) const noexcept;
+    [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept;
     [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept;
     [[gnu::hot]] void Flush() const noexcept;
     [[nodiscard]] inline uint8_t GetWidth() const noexcept{return this->Width;}

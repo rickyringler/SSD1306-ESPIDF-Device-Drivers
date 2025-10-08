@@ -19,9 +19,9 @@ SSD1306::SSD1306(const uint16_t Width, const uint16_t Height, const uint8_t Page
     return true;
 }
 
-[[gnu::hot]] void SSD1306::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Offset, uint8_t Data[16]) const noexcept
+[[gnu::hot]] void SSD1306::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept
 {
-    this->Bus->Draw(Segment, Page, Width, Offset, *Data);
+    this->Bus->Draw(Segment, Page, Width, Offset, Bytes, Data);
 }
 
 [[gnu::hot]] void SSD1306::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept

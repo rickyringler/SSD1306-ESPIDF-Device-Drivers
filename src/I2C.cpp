@@ -110,14 +110,14 @@ bool I2C::Start() const noexcept
     return Validations == ValuesToValidate;
 }
 
-[[gnu::hot]] void I2C::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, uint8_t Data) const noexcept
+[[gnu::hot]] void I2C::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept
 {
     IndexGDDRAM(Segment, Page, Offset);
     i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
     i2c_master_write_byte(Command, Address << I2C_MASTER_WRITE, true);
     Mode(ControlBytes.DATA_MODE, Command);
-    i2c_master_write(Command, &Data, Width, true);
+    i2c_master_write(Command, Data, Width, true);
     i2c_master_stop(Command);
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(Command);
@@ -175,16 +175,16 @@ bool I2C::Start() const noexcept
 
 [[gnu::hot]] void I2C::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept
 {
-    uint8_t DummyBuffer[16] = {};
-    Draw(Segment, Page, Width, Offset, *DummyBuffer);
+    uint8_t* DummyBuffer = 0;
+    Draw(Segment, Page, Width, Offset, 0, DummyBuffer);
 }
 
 [[gnu::hot]] void I2C::Flush() const noexcept
 {
-    uint8_t DummyBuffer[16] = {};
+    uint8_t* DummyBuffer = 0;
     for (int Page=0; Page < DeviceConfig.PAGES; Page++)
     {
-        Draw(Page, Page, Page, 0, *DummyBuffer);
+        Draw(Page, Page, Page, 0, 0, DummyBuffer);
     }
 }
 

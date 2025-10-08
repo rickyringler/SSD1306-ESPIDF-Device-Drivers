@@ -13,7 +13,7 @@ public:
     SPI(uint8_t Address, const SSD1306Configuration& Configuration);
 
     [[gnu::cold]] esp_err_t Probe() const override;
-    [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Width, uint8_t Offset, uint8_t Data) const noexcept override;
+    [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Width, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept override;
     [[gnu::hot]] void Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept override;
     [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept override;
     [[gnu::hot]] void Flush() const noexcept override;
@@ -43,6 +43,7 @@ private:
     [[nodiscard]] spi_device_handle_t SetupDevice() const noexcept;
 
     [[gnu::hot]] bool WriteByte(const int Data, uint8_t CommandByte, uint8_t Pin) const noexcept;
+    [[gnu::hot]] bool WriteBuffer(const uint8_t* Data, size_t Bytes, uint8_t CommandByte, uint8_t Pin) const noexcept;
 };
 
 #endif
