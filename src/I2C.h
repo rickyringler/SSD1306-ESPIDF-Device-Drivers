@@ -4,28 +4,27 @@
 #include "BusProtocol.h"
 
 #define I2C_TAG "I2C"
-#define TIMEOUT (1000/portTICK_PERIOD_MS)
 
 class I2C final : public BusProtocol
 {
 public:
 
-    I2C(uint8_t Address, const SSD1306Configuration& Configuration);
+    I2C(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins);
 
     [[gnu::cold]] esp_err_t Probe() const override;
-    [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Width, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept override;
+    [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept override;
     [[gnu::hot]] void Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept override;
-    [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept override;
+    [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept override;
     [[gnu::hot]] void Flush() const noexcept override;
 
 private:
 
-    i2c_config_t         BusConfig  = {};
-    uint8_t              Address;
-    SSD1306ControlBytes  ControlBytes;
-    SSD1306Commands      Commands;
-    SSD1306Pins          Pins;
-    SSD1306Configuration DeviceConfig;
+    const SSD1306Configuration* DeviceConfig;
+    const SSD1306Pins*          Pins;
+    i2c_config_t                BusConfig  = {};
+    uint8_t                     Address;
+    SSD1306ControlBytes         ControlBytes;
+    SSD1306Commands             Commands;
 
     bool                    Configure() noexcept;
     bool                    Start() const noexcept;

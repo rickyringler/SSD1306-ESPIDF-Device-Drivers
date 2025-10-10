@@ -4,29 +4,27 @@
 #include "BusProtocol.h"
 
 #define SPI_TAG "SPI"
-#define TIMEOUT (1500/portTICK_PERIOD_MS)
 
 class SPI final : public BusProtocol
 {
 public:
 
-    SPI(uint8_t Address, const SSD1306Configuration& Configuration);
+    SPI(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins);
 
     [[gnu::cold]] esp_err_t Probe() const override;
-    [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Width, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept override;
+    [[gnu::hot]] void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept override;
     [[gnu::hot]] void Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept override;
-    [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept override;
+    [[gnu::hot]] void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept override;
     [[gnu::hot]] void Flush() const noexcept override;
 
 private:
 
-    spi_bus_config_t     BusConfig  = {};
-    spi_device_handle_t  DeviceHandle = nullptr;
-    uint8_t              Address;
-    SSD1306ControlBytes  ControlBytes;
-    SSD1306Commands      Commands;
-    SSD1306Pins          Pins;
-    SSD1306Configuration DeviceConfig;
+    const SSD1306Configuration* DeviceConfig;
+    const SSD1306Pins*          Pins;
+    spi_bus_config_t            BusConfig  = {};
+    spi_device_handle_t         DeviceHandle = nullptr;
+    SSD1306ControlBytes         ControlBytes;
+    SSD1306Commands             Commands;
 
     bool                    Configure() noexcept;
     bool                    Init() noexcept;
@@ -40,10 +38,10 @@ private:
     [[gnu::hot]]  void      IndexGDDRAM(const uint8_t Segment, const uint8_t Page, uint8_t Offset) const noexcept;
     [[gnu::hot]]  void      ScrollHorizontal(const uint8_t ScrollCommand) const noexcept;
     [[gnu::hot]]  void      ScrollVertical(const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept;
-    [[nodiscard]] spi_device_handle_t SetupDevice() const noexcept;
 
     [[gnu::hot]] bool WriteByte(const int Data, uint8_t CommandByte, uint8_t Pin) const noexcept;
     [[gnu::hot]] bool WriteBuffer(const uint8_t* Data, size_t Bytes, uint8_t CommandByte, uint8_t Pin) const noexcept;
+    [[nodiscard]] spi_device_handle_t SetupDevice() const noexcept;
 };
 
 #endif

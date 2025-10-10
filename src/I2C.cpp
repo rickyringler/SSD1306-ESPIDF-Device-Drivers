@@ -1,8 +1,8 @@
 #include "I2C.h"
 #include <esp_log.h>
 
-I2C::I2C(uint8_t Address, const SSD1306Configuration& Configuration)
-    : Address(Address), DeviceConfig(Configuration)
+I2C::I2C(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins)
+    : DeviceConfig(&Configuration), Pins(&Pins)
 {
     Configure();
 }
@@ -80,11 +80,11 @@ bool I2C::Start() const noexcept
 [[nodiscard]] esp_err_t I2C::BuildConfig() noexcept
 {
     BusConfig.mode             = I2C_MODE_MASTER;
-    BusConfig.sda_io_num       = Pins.SDA;
-    BusConfig.scl_io_num       = Pins.SCL;
+    BusConfig.sda_io_num       = Pins->SDA;
+    BusConfig.scl_io_num       = Pins->SCL;
     BusConfig.sda_pullup_en    = GPIO_PULLUP_ENABLE;
     BusConfig.scl_pullup_en    = GPIO_PULLUP_ENABLE;
-    BusConfig.master.clk_speed = DeviceConfig.CLOCK_SPEED_HZ;
+    BusConfig.master.clk_speed = DeviceConfig->CLOCK_SPEED_HZ;
 
     return ValidateConfig() == false ? ESP_FAIL : ESP_OK;
 }
@@ -94,30 +94,30 @@ bool I2C::Start() const noexcept
     const uint8_t ValuesToValidate = 6;
     uint8_t Validations = ValuesToValidate;
 
-    if (BusConfig.mode == DeviceConfig.I2C_MODE_MASTER)
+    if (BusConfig.mode == DeviceConfig->I2C_MODE_MASTER)
         Validations--;
-    if (BusConfig.sda_io_num == Pins.SDA)
+    if (BusConfig.sda_io_num == Pins->SDA)
         Validations--;
-    if (BusConfig.scl_io_num == Pins.SCL)
+    if (BusConfig.scl_io_num == Pins->SCL)
         Validations--;
-    if (BusConfig.sda_pullup_en == DeviceConfig.GPIO_PULLUP_ENABLE)
+    if (BusConfig.sda_pullup_en == DeviceConfig->GPIO_PULLUP_ENABLE)
         Validations--;
-    if (BusConfig.scl_pullup_en == DeviceConfig.GPIO_PULLUP_ENABLE)
+    if (BusConfig.scl_pullup_en == DeviceConfig->GPIO_PULLUP_ENABLE)
         Validations--;
-    if (BusConfig.master.clk_speed == DeviceConfig.CLOCK_SPEED_HZ)
+    if (BusConfig.master.clk_speed == DeviceConfig->CLOCK_SPEED_HZ)
         Validations--;
 
     return Validations == ValuesToValidate;
 }
 
-[[gnu::hot]] void I2C::Draw(const uint8_t Segment, const uint8_t Page, const uint8_t Width, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept
+[[gnu::hot]] void I2C::Draw(const uint8_t Segment, const uint8_t Page, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept
 {
     IndexGDDRAM(Segment, Page, Offset);
     i2c_cmd_handle_t Command = i2c_cmd_link_create();
     i2c_master_start(Command);
     i2c_master_write_byte(Command, Address << I2C_MASTER_WRITE, true);
     Mode(ControlBytes.DATA_MODE, Command);
-    i2c_master_write(Command, Data, Width, true);
+    i2c_master_write(Command, Data, DeviceConfig->BIT_SIZE, true);
     i2c_master_stop(Command);
     i2c_master_cmd_begin(I2C_NUM_1, Command, 1000/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(Command);
@@ -173,19 +173,15 @@ bool I2C::Start() const noexcept
     i2c_master_write_byte(Command, Commands.ACTIVATE_SCROLL, true);
 }
 
-[[gnu::hot]] void I2C::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Width, const uint8_t Offset) const noexcept
+[[gnu::hot]] void I2C::Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept
 {
     uint8_t* DummyBuffer = 0;
-    Draw(Segment, Page, Width, Offset, 0, DummyBuffer);
+    Draw(Segment, Page, Offset, 0, DummyBuffer);
 }
 
 [[gnu::hot]] void I2C::Flush() const noexcept
 {
     uint8_t* DummyBuffer = 0;
-    for (int Page=0; Page < DeviceConfig.PAGES; Page++)
-    {
-        Draw(Page, Page, Page, 0, 0, DummyBuffer);
-    }
 }
 
 [[gnu::hot]] void I2C::IndexGDDRAM(const uint8_t Segment, const uint8_t Page, uint8_t Offset) const noexcept

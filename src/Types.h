@@ -8,4 +8,10 @@ enum Direction
     STOP
 };
 
+enum Protocol
+{
+    SPI_BUS=0,
+    I2C_BUS
+};
+
 #endif

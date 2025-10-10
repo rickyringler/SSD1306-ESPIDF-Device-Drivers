@@ -5,11 +5,12 @@ struct SSD1306Commands
 {
     static constexpr int SYS_CALL                                 = 0x80;
     static constexpr int SET_CONTRAST_CONTROL                     = 0x81;
+        static constexpr int DEFAULT_CONTRAST                     = 0x7F;
     static constexpr int ENTIRE_DISPLAY_ON_WITH_CONTENT           = 0xA4;
     static constexpr int ENTIRE_DISPLAY_ON_WITHOUT_CONTENT        = 0xA5;
     static constexpr int SET_NORMAL_DISPLAY                       = 0xA6;
     static constexpr int SET_INVERSE_DISPLAY                      = 0xA7;
-    static constexpr int SET_DISPLAY_OFF                          = 0xAE; //sleep
+    static constexpr int SET_DISPLAY_OFF                          = 0xAE;
     static constexpr int SET_DISPLAY_ON                           = 0xAF;
     static constexpr int ACTIVATE_SCROLL                          = 0x2F;
     static constexpr int DEACTIVATE_SCROLL                        = 0x2E;
@@ -21,6 +22,9 @@ struct SSD1306Commands
     static constexpr int SET_LOWER_COLUMN_START                   = 0x00;
     static constexpr int SET_HIGHER_COLUMN_START                  = 0x10;
     static constexpr int SET_MEMORY_ADDRESSING_MODE               = 0x20;
+        static constexpr int HORIZONTAL_ADDRESSING_MODE           = 0x00;
+        static constexpr int VERTICAL_ADDRESSING_MODE             = 0x01;
+        static constexpr int PAGE_ADDRESSING_MODE                 = 0x02;
     static constexpr int SET_COLUMN_ADDRESS                       = 0x21;
     static constexpr int SET_PAGE_ADDRESS                         = 0x22;
     static constexpr int SET_PAGE_START                           = 0xB0;
@@ -34,7 +38,11 @@ struct SSD1306Commands
     static constexpr int SET_COM_PINS_HARDWARE_CONFIG             = 0xDA;
     static constexpr int SET_DISPLAY_CLOCK_FREQ                   = 0xD5;
     static constexpr int SET_PRECHARGE_PERIOD                     = 0xD9;
+        static constexpr int PHASE_ONE                            = 0x01;
+        static constexpr int PHASE_TWO                            = 0x0F;
     static constexpr int CHARGE_PUMP_SETTING                      = 0x8D;
+        static constexpr int ENABLE_CHARGE_PUMP                   = 0x14;
+        static constexpr int DISABLE_CHARGE_PUMP                  = 0x10;
     static constexpr int SET_VCOM_DESELECT_LEVEL                  = 0xDB;
     static constexpr int NOP                                      = 0xE3;
 };
