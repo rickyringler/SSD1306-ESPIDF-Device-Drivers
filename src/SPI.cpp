@@ -153,7 +153,6 @@ void SPI::SetupPin(const gpio_num_t Pin) const noexcept
     Transaction.tx_buffer = Data;
     Mode(CommandByte, Pin);
     spi_device_transmit(DeviceHandle, &Transaction);
-    ESP_LOGI("SPI TEST", "DRAW IMAGE");
     return true;
 }
 
