@@ -1,16 +1,17 @@
+# SSD1306
+
 ## Datasheet:
 https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf
 
 ## Specifications:
-SSD1306
-0.96-inch | 24.384mm
-Monochrome
-128 segments | columns
-8 pages | rows
-
-Two modes:
-    Command Mode = 0x00
-    Data Mode    = 0x40
+| Parameter | Description |
+|------------|-------------|
+| **Display Type** | Monochrome OLED |
+| **Resolution** | 128 × 64 pixels |
+| **Physical Size** | 0.96 inch (24.384 mm) |
+| **Segments (Columns)** | 128 |
+| **Pages (Rows)** | 8 |
+| **Communication Protocols** | I²C or SPI |
 
 ## Instructions:
   1. Intiailize SSD1306Configuration
@@ -20,7 +21,7 @@ Two modes:
 
  ## Example:
 
-  ``cpp
+  ````cpp
 #include "../include/include.h"
 
 extern "C" void app_main(void)
@@ -72,4 +73,4 @@ extern "C" void app_main(void)
     }
 
     vTaskDelay(TIMEOUT);
-}``
+}````
