@@ -18,7 +18,7 @@ public:
 
 private:
 
-    [[gnu::cold]] bool Init(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocol Protocol) noexcept;
+    [[gnu::cold]] bool Init(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocol Protocol);
 
     BusProtocol*     Bus = nullptr;
 };

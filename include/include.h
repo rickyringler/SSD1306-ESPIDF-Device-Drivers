@@ -3,5 +3,6 @@
 
 #include "SSD1306.h"
 #include "Configuration.h"
+#include "Pins.h"
 
 #endif
