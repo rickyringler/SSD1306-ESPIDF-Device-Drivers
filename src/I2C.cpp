@@ -181,7 +181,18 @@ bool I2C::Start() const noexcept
 
 [[gnu::hot]] void I2C::Flush() const noexcept
 {
-    uint8_t* DummyBuffer = 0;
+    uint8_t* DummyBuffer[8] = {0};
+    int Column = 0;
+    for (int Row = 0; Column < 129 ; Row++)
+    {
+        static constexpr size_t Size = 8;
+        if ((Row >> 3) << 3 == Row)
+        {
+            Row = 0;
+            Column++;
+        }
+        Draw(Column,Row,0, Size, *DummyBuffer);
+    }
 }
 
 [[gnu::hot]] void I2C::IndexGDDRAM(const uint8_t Segment, const uint8_t Page, uint8_t Offset) const noexcept

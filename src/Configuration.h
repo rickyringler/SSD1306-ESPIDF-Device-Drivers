@@ -8,6 +8,9 @@ struct SSD1306Configuration
     SSD1306Configuration(const int ClockSpeedHz, const int I2cModeMaster, const int PullupEnable,  const int BitSize, const uint16_t Width, const uint16_t Height, const uint8_t Address)
     :CLOCK_SPEED_HZ(ClockSpeedHz), I2C_MODE_MASTER(I2cModeMaster), GPIO_PULLUP_ENABLE(PullupEnable), BIT_SIZE(BitSize), WIDTH(Width), HEIGHT(Height), ADDRESS(Address){}
 
+    SSD1306Configuration(const int ClockSpeedHz, const int PullupEnable,  const int BitSize, const uint16_t Width, const uint16_t Height, const uint8_t Address)
+    :CLOCK_SPEED_HZ(ClockSpeedHz), GPIO_PULLUP_ENABLE(PullupEnable), BIT_SIZE(BitSize), WIDTH(Width), HEIGHT(Height), ADDRESS(Address){}
+
     static constexpr int PAGES        = 8;
     const int      CLOCK_SPEED_HZ     = 400000;
     const int      I2C_MODE_MASTER    = 1;

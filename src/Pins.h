@@ -4,6 +4,10 @@
 
 struct SSD1306Pins
 {
+    SSD1306Pins()=default;
+
+    SSD1306Pins(const SSD1306Pins& Other)=delete;
+
     SSD1306Pins(gpio_num_t SCLK, gpio_num_t MOSI, gpio_num_t DC, gpio_num_t CS)
     :SCLK(SCLK), MOSI(MOSI), DC(DC), CS(CS){}
 

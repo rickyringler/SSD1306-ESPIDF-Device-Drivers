@@ -160,6 +160,7 @@ void SPI::SetupPin(const gpio_num_t Pin) const noexcept
 {
     IndexGDDRAM(Segment, Page, Offset);
     WriteBuffer(Data, Bytes, ControlBytes.DATA_MODE, Pins->DC);
+    ESP_LOGI(SPI_TAG,"Draw");
 }
 
 [[gnu::hot]] void SPI::Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept
@@ -210,10 +211,17 @@ void SPI::SetupPin(const gpio_num_t Pin) const noexcept
 
 [[gnu::hot]] void SPI::Flush() const noexcept
 {
-    uint8_t* DummyBuffer = 0;
-    for (int Page=0; Page < DeviceConfig->PAGES; Page++)
+    uint8_t* DummyBuffer[8] = {0};
+    int Column = 0;
+    for (int Row = 0; Column < 129 ; Row++)
     {
-        Draw(Page, Page, 0, 0, DummyBuffer);
+        static constexpr size_t Size = 8;
+        if ((Row >> 3) << 3 == Row)
+        {
+            Row = 0;
+            Column++;
+        }
+        Draw(Column,Row,0, Size, *DummyBuffer);
     }
 }
 
