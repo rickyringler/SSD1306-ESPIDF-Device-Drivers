@@ -1,5 +1,5 @@
-#ifndef SSD1306_3D_DEVICE_DRIVER_TYPES_H
-#define SSD1306_3D_DEVICE_DRIVER_TYPES_H
+#ifndef SSD1306_TYPES_H
+#define SSD1306_TYPES_H
 
 enum Direction
 {

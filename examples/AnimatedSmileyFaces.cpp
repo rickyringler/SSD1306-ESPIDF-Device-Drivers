@@ -24,10 +24,9 @@ extern "C" void app_main(void)
     const SSD1306Pins MCUPins(GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_33, GPIO_NUM_27);
     const SSD1306 MCU(MCUConfig, MCUPins, Protocol(SPI_BUS));
 
-#pragma region DrawStuff
-
     int Column = 0;
-    for (int Row = 0; Column < 129 ; Row++)
+    int Columns = MCUConfig.height + 1
+    for (int Row = 0; Column < Columns; Row++)
     {
         static constexpr size_t Size = 8;
         if ((Row >> 3) << 3 == Row)
@@ -40,5 +39,4 @@ extern "C" void app_main(void)
 
     vTaskDelay(TIMEOUT);
 
-#pragma endregion
 }

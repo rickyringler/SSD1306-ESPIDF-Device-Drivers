@@ -1,5 +1,5 @@
-#ifndef SSD1306_3D_DEVICE_DRIVER_BUSPROTOCOL_H
-#define SSD1306_3D_DEVICE_DRIVER_BUSPROTOCOL_H
+#ifndef SSD1306_BUSPROTOCOL_H
+#define SSD1306_BUSPROTOCOL_H
 
 #include "Configuration.h"
 #include "Commands.h"

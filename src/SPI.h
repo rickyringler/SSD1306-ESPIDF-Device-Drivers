@@ -1,5 +1,5 @@
-#ifndef SSD1306_3D_DEVICE_DRIVER_SPI_H
-#define SSD1306_3D_DEVICE_DRIVER_SPI_H
+#ifndef SSD1306_SPI_H
+#define SSD1306_SPI_H
 
 #include "BusProtocol.h"
 

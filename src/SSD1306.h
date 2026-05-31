@@ -1,5 +1,5 @@
-#ifndef SSD1306_3D_DEVICE_DRIVER_SSD1306_H
-#define SSD1306_3D_DEVICE_DRIVER_SSD1306_H
+#ifndef SSD1306_SSD1306_H
+#define SSD1306_SSD1306_H
 
 #include "Configuration.h"
 #include "BusProtocol.h"
@@ -18,7 +18,7 @@ public:
 
 private:
 
-    [[gnu::cold]] bool Init(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocol Protocol);
+    bool Init(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocol Protocol);
 
     BusProtocol*     Bus = nullptr;
 };

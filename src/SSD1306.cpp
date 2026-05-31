@@ -12,7 +12,7 @@ SSD1306::SSD1306(const SSD1306Configuration& Configuration, const SSD1306Pins& P
     this->Bus->Probe();
 }
 
-[[gnu::cold]] bool SSD1306::Init(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocol Protocol)
+bool SSD1306::Init(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocol Protocol)
 {
     switch (Protocol)
     {
@@ -37,6 +37,7 @@ SSD1306::SSD1306(const SSD1306Configuration& Configuration, const SSD1306Pins& P
 {
     this->Bus->Clear(Segment, Page, Offset);
 }
+
 [[gnu::hot]] void SSD1306::Flush(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept
 {
     this->Bus->Flush();

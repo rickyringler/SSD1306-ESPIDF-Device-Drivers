@@ -1,5 +1,5 @@
-#ifndef SSD1306_3D_DEVICE_DRIVER_I2C_H
-#define SSD1306_3D_DEVICE_DRIVER_I2C_H
+#ifndef SSD1306_I2C_H
+#define SSD1306_I2C_H
 
 #include "BusProtocol.h"
 
