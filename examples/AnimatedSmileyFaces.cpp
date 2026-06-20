@@ -1,7 +1,9 @@
-#include "../include/include.h"
+#include "include.h"
 
 extern "C" void app_main(void)
 {
+
+	/* 1 : Create 8-bit binary representation of something */
     uint8_t SmileyFace[8] =
     {
         0b00111100, // PAGE 0
@@ -13,6 +15,8 @@ extern "C" void app_main(void)
         0b01000010, // PAGE 6
         0b00111100  // PAGE 7
     };
+
+    /* 2 : Declare what we want. Override defaults if needed. */
     constexpr  uint8_t  ADDRESS            = 0xFF;
     constexpr  uint16_t WIDTH              = 64;
     constexpr  uint16_t HEIGHT             = 128;
@@ -20,21 +24,28 @@ extern "C" void app_main(void)
     constexpr  int      CLOCK_SPEED_HZ     = 400000;
     constexpr  int      I2C_MODE_MASTER    = 1;
     constexpr  int      GPIO_PULLUP_ENABLE = 1;
-    const SSD1306Configuration MCUConfig(CLOCK_SPEED_HZ, I2C_MODE_MASTER, GPIO_PULLUP_ENABLE, BIT_SIZE, WIDTH, HEIGHT, ADDRESS);
-    const SSD1306Pins MCUPins(GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_33, GPIO_NUM_27);
-    const SSD1306 MCU(MCUConfig, MCUPins, Protocol(SPI_BUS));
 
+    /* 3 : Initialize the config, pins, and device. */
+    const SSD1306Configuration DisplayConfig(CLOCK_SPEED_HZ, I2C_MODE_MASTER, GPIO_PULLUP_ENABLE, BIT_SIZE, WIDTH, HEIGHT, ADDRESS);
+    const SSD1306Pins DisplayPins(GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_33, GPIO_NUM_27);
+    const SSD1306 Display(DisplayConfig, DisplayPins, Protocol(SPI_BUS));
+
+    /* 4 : Enter draw loop. Flush out every segment of each page from a previous run. */
     int Column = 0;
-    int Columns = MCUConfig.height + 1
-    for (int Row = 0; Column < Columns; Row++)
+    int Columns = DisplayConfig.HEIGHT + 1;
+    Display.Flush();
+    while (true)
     {
-        static constexpr size_t Size = 8;
-        if ((Row >> 3) << 3 == Row)
+        for (int Row = 0; Column < Columns; Row++)
         {
-            Row = 0;
-            Column++;
+            static constexpr size_t Size = 8;
+            if ((Row >> 3) << 3 == Row)
+            {
+                Row = 0;
+                Column++;
+            }
+            Display.Draw(Column, Row, 0, Size, &SmileyFace[0]);
         }
-        MCU.Draw(Column,Row,0, Size, &SmileyFace[0]);
     }
 
     vTaskDelay(TIMEOUT);
