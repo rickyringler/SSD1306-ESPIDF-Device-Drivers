@@ -1,5 +1,13 @@
-# SSD1306 Device Driver
-## SSD1306 monochrome display device driver with ESP-IDF framework.
+# C++ SSD1306 Device Driver
+
+----
+
+Device driver written for the monochrome OLED SSD1306 display, written in
+C++ with the ESP-IDF framework.
+
+The inspiration for this project was my frustration with learning the SSD1306 from
+preexisting open-source projects for the SSD1306, which were mostly C projects with 
+unintuitive APIs.
 
 https://github.com/user-attachments/assets/94118cc5-dba4-4a71-a109-0b4438e31e67
 
