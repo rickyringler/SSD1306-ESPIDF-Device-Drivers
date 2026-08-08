@@ -3,7 +3,8 @@
 #include "SPI.h"
 #include <esp_log.h>
 
-SSD1306::SSD1306(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocol Protocol)
+SSD1306::SSD1306(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocols Protocol)
+    : Protocol(Protocol)
 {
     Init(Configuration, Pins, Protocol);
 }
@@ -13,21 +14,21 @@ SSD1306::SSD1306(const SSD1306Configuration& Configuration, const SSD1306Pins& P
    return this->Bus->Probe();
 }
 
-bool SSD1306::Init(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocol Protocol)
+bool SSD1306::Init(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins, Protocols Protocol)
 {
     switch (Protocol)
     {
-        case SPI_BUS:
+        case Protocols::SPI_BUS:
             this->Bus = new SPI(Configuration, Pins);
             return true;
-        case I2C_BUS:
+        case Protocols::I2C_BUS:
             this->Bus = new I2C(Configuration, Pins);
             return true;
-        case UART_BUS:
+        case Protocols::UART_BUS:
             assert("UART protocol not supported for this SSD1306 driver.");
             return false;
         default:
-            ESP_LOGW(SPI_TAG, "ERROR : expected bus protocol, but you passed in nonsense.");
+            ESP_LOGW(Tag, "ERROR : expected bus protocol, but you passed in nonsense.");
             break;
     }
     return false;
@@ -53,7 +54,7 @@ bool SSD1306::Init(const SSD1306Configuration& Configuration, const SSD1306Pins&
     this->Bus->Flush();
 }
 
-[[nodiscard]] Status SSD1306::GetStatus() const noexcept
+[[nodiscard]] Statuses SSD1306::GetStatus() const noexcept
 {
     return this->Bus->GetStatus();
 }

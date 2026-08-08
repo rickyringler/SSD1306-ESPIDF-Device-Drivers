@@ -24,16 +24,18 @@ class BusProtocol
 public:
     virtual ~BusProtocol()=default;
 
+	virtual bool Configure()=0;
+	virtual void Start() const noexcept=0;
     [[gnu::cold]] virtual bool Probe()=0;
     [[gnu::hot]] virtual void Draw(const uint8_t Segment, const uint8_t Page, uint8_t Offset, size_t Bytes, uint8_t* Data) const noexcept=0;
     [[gnu::hot]] virtual void Draw(const uint8_t SegmentLow, const uint8_t SegmentHigh, const uint8_t Page, const uint8_t Offset, const size_t Bytes, uint8_t* Data) const noexcept=0;
-    [[gnu::hot]] virtual void Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept=0;
+    [[gnu::hot]] virtual void Scroll(const Directions Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept=0;
     [[gnu::hot]] virtual void Clear(const uint8_t Segment, const uint8_t Page, const uint8_t Offset) const noexcept=0;
     [[gnu::hot]] virtual void Flush() const noexcept=0;
-    [[nodiscard]] Status GetStatus() const noexcept { return this->DeviceStatus;}
+    [[nodiscard]] Statuses GetStatus() const noexcept { return this->DeviceStatus;}
 
 protected:
-    Status DeviceStatus = Status::NONE;
+    Statuses DeviceStatus = Statuses::NONE;
 
 	[[nodiscard]] uint8_t OffsetLow(uint8_t Segment, uint8_t Offset) const noexcept
 	{
@@ -47,7 +49,7 @@ protected:
     	return OffsetHigh;
 	}
 
-    inline void SetStatus(Status NewDeviceStatus) noexcept
+    inline void SetStatus(Statuses NewDeviceStatus) noexcept
 	{
 		this->DeviceStatus = NewDeviceStatus;
 	}

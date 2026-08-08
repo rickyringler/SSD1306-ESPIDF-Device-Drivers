@@ -7,13 +7,13 @@ SPI::SPI(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins)
 {
     if (!Configure() || !Init())
 	{
-		SetStatus(Status::ERROR);
-    	ESP_LOGW(SPI_TAG, "ERROR killing self");
+		SetStatus(Statuses::ERROR);
+    	ESP_LOGE(Tag, "ERROR killing self");
 	}
 	else
 	{
-		SetStatus(Status::OK);
-    	ESP_LOGW(SPI_TAG, "SUCCESS starting");
+		SetStatus(Statuses::OK);
+    	ESP_LOGI(Tag, "SUCCESS starting");
 		Start();
 	}
 }
@@ -24,7 +24,7 @@ bool SPI::Configure()
 
     if (!BuildConfig())
     {
-        ESP_LOGW(SPI_TAG, "ERROR building config");
+        ESP_LOGE(Tag, "ERROR building config");
         Configured = false;
     }
 
@@ -41,7 +41,7 @@ bool SPI::Init()
 
 	if (!this->DeviceHandle)
 	{
-        ESP_LOGW(SPI_TAG, "ERROR initializing");
+        ESP_LOGE(Tag, "ERROR initializing resources");
 		Initialized = false;
 	}
 
@@ -88,17 +88,17 @@ void SPI::SetupPin(const gpio_num_t Pin) const noexcept
 
     if (!BusConfig.mosi_io_num)
 	{
-        ESP_LOGW(SPI_TAG, "ERROR failed to provide MOSI pin");
+        ESP_LOGE(Tag, "ERROR failed to provide MOSI pin");
         Valid = false;
 	}
     else if (!BusConfig.miso_io_num)
 	{
-        ESP_LOGW(SPI_TAG, "ERROR failed to provide MISO pin");
+        ESP_LOGE(Tag, "ERROR failed to provide MISO pin");
         Valid = false;
 	}
     else if (!BusConfig.sclk_io_num)
 	{
-        ESP_LOGW(SPI_TAG, "ERROR failed to provide SCLK pin");
+        ESP_LOGE(Tag, "ERROR failed to provide SCLK pin");
 		Valid = false;
 	}
 
@@ -140,16 +140,16 @@ void SPI::Start() const noexcept
 
 [[gnu::cold]] bool SPI::Probe()
 {
-    ESP_LOGI(SPI_TAG, "Probe : Begin");
+    ESP_LOGD(Tag, "Probe : Begin");
     spi_transaction_t Transaction = {};
     Transaction.flags = SPI_TRANS_USE_TXDATA;
     Transaction.length = Config->BIT_SIZE;
     Transaction.tx_data[0] = Commands.SET_DISPLAY_ON;
 
-    ESP_LOGI(SPI_TAG, "Probe : Transmitting");
+    ESP_LOGD(Tag, "Probe : Transmitting");
     gpio_set_level((gpio_num_t)Pins->DC, 0);
     esp_err_t Response = spi_device_transmit(DeviceHandle, &Transaction);
-    ESP_LOGI(SPI_TAG, "Probe : Response : %s", esp_err_to_name(Response));
+    ESP_LOGD(Tag, "Probe : Response : %s", esp_err_to_name(Response));
 
     vTaskDelay(TIMEOUT);
     Transaction.flags = SPI_TRANS_USE_TXDATA;
@@ -164,24 +164,22 @@ void SPI::Start() const noexcept
 {
     IndexGDDRAM(Segment, Page, Offset);
     WriteBuffer(Data, Bytes, ControlBytes.DATA_MODE, Pins->DC);
-    ESP_LOGI(SPI_TAG,"Draw");
 }
 
 [[gnu::hot]] void SPI::Draw(const uint8_t SegmentLow, const uint8_t SegmentHigh, const uint8_t Page, const uint8_t Offset, const size_t Bytes, uint8_t* Data) const noexcept
 {
     IndexGDDRAM(SegmentLow, SegmentHigh, Page, Offset);
     WriteBuffer(Data, Bytes, ControlBytes.DATA_MODE, Pins->DC);
-    ESP_LOGI(SPI_TAG,"Draw");
 }
 
-[[gnu::hot]] void SPI::Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept
+[[gnu::hot]] void SPI::Scroll(const Directions Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept
 {
     switch (Direction)
     {
-        case Direction::HORIZONTAL:
+        case Directions::HORIZONTAL:
             ScrollHorizontal(ScrollCommand);
             break;
-        case Direction::VERTICAL:
+        case Directions::VERTICAL:
             ScrollVertical(ScrollCommand, VerticalOffset);
             break;
         default:

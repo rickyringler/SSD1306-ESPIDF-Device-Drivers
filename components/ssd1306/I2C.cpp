@@ -10,13 +10,13 @@ I2C::I2C(const SSD1306Configuration& Configuration, const SSD1306Pins& Pins)
 {
     if (!Configure())
     {
-        SetStatus(Status::ERROR);
-        ESP_LOGW(I2C_TAG, "ERROR killing self");
+        SetStatus(Statuses::ERROR);
+        ESP_LOGE(Tag, "ERROR killing self");
     }
     else
     {
-        SetStatus(Status::OK);
-        ESP_LOGW(I2C_TAG, "SUCCESS starting");
+        SetStatus(Statuses::OK);
+        ESP_LOGI(Tag, "SUCCESS starting");
         Start();
     }
 }
@@ -27,7 +27,7 @@ bool I2C::Configure()
 
     if (!BuildConfig())
     {
-        ESP_LOGW(I2C_TAG, "ERROR building config");
+        ESP_LOGE(Tag, "ERROR building config");
         Configured = false;
     }
 
@@ -62,12 +62,12 @@ bool I2C::ValidateConfig()
 
     if (!BusConfig.sda_io_num)
     {
-        ESP_LOGW(I2C_TAG, "ERROR failed to provide SDA pin");
+        ESP_LOGE(Tag, "ERROR failed to provide SDA pin");
         Valid = false;
     }
     else if (!BusConfig.scl_io_num)
     {
-        ESP_LOGW(I2C_TAG, "ERROR failed to provide SCL pin");
+        ESP_LOGE(Tag, "ERROR failed to provide SCL pin");
         Valid = false;
     }
 
@@ -112,15 +112,15 @@ void I2C::Start() const
     static constexpr const uint8_t AddressMax = 127;
     int Found = 0;
 
-    ESP_LOGI(I2C_TAG, "Probe : Begin");
-    ESP_LOGI(I2C_TAG, "Probe : Scanning port %d  : ", Config->I2C_PORT);
+    ESP_LOGD(Tag, "Probe : Begin");
+    ESP_LOGD(Tag, "Probe : Scanning port %d  : ", Config->I2C_PORT);
 
     for (int AddressToScan = 0; AddressToScan < AddressMax; ++AddressToScan)
     {
         const uint8_t Address = AddressToScan;
         if (i2c_master_probe(BusHandle, AddressToScan, -1) == ESP_OK)
         {
-            ESP_LOGI(I2C_TAG, "Probe : Device Found : %d ", Address);
+            ESP_LOGD(Tag, "Probe : Device Found : %d ", Address);
             Found++;
         }
     }
@@ -141,16 +141,16 @@ void I2C::Start() const
     Mode(ControlBytes.DATA_MODE);
 }
 
-[[gnu::hot]] void I2C::Scroll(const Direction Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept
+[[gnu::hot]] void I2C::Scroll(const Directions Direction, const uint8_t ScrollCommand, const uint8_t VerticalOffset) const noexcept
 {
     Mode(ControlBytes.COMMAND_MODE);
 
     switch (Direction)
     {
-        case Direction::HORIZONTAL:
+        case Directions::HORIZONTAL:
             ScrollHorizontal(ScrollCommand);
             break;
-        case Direction::VERTICAL:
+        case Directions::VERTICAL:
             ScrollVertical(ScrollCommand, VerticalOffset);
             break;
         default:
