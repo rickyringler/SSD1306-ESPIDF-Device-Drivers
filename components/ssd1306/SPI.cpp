@@ -140,6 +140,7 @@ void SPI::Start() const noexcept
 
 [[gnu::cold]] bool SPI::Probe()
 {
+    static constexpr TickType_t Timeout = (1000/portTICK_PERIOD_MS);
     ESP_LOGD(Tag, "Probe : Begin");
     spi_transaction_t Transaction = {};
     Transaction.flags = SPI_TRANS_USE_TXDATA;
@@ -151,7 +152,7 @@ void SPI::Start() const noexcept
     esp_err_t Response = spi_device_transmit(DeviceHandle, &Transaction);
     ESP_LOGD(Tag, "Probe : Response : %s", esp_err_to_name(Response));
 
-    vTaskDelay(TIMEOUT);
+    vTaskDelay(Timeout);
     Transaction.flags = SPI_TRANS_USE_TXDATA;
     Transaction.length = Config->BIT_SIZE;
     Transaction.tx_data[0] = Commands.SET_DISPLAY_OFF;

@@ -9,7 +9,6 @@
 #include <driver/gpio.h>
 #include "freertos/FreeRTOS.h"
 
-#define TIMEOUT (1000/portTICK_PERIOD_MS)
 
 /*
 * Pure virtual to be inherited by protocol implementation.
