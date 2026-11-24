@@ -1,4 +1,10 @@
 .pio
+CMakeFiles
+*.xml
+*.clangd
+build/*
+*/build/*
+*/.idea/*
 /build/CMakeFiles/3.28.3/CompilerIdC/a.out
 /build/CMakeFiles/3.28.3/CompilerIdCXX/a.out
 /build/CMakeFiles/cmake.check_cache
